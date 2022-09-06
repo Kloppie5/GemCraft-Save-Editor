@@ -3,7 +3,26 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
     <script>
       var state = "uninitialized"
-      var savefile = {}
+      var savefile = ""
+
+      function b64decode ( ) {
+        savefile = atob(savefile)
+        savefile = savefile.split('').map(function(x){return x.charCodeAt(0);});
+        savefile = new Uint8Array(savefile);
+        document.getElementById('savefile-b64decode').value = savefile
+      }
+
+      function decryptSave ( ) {
+        var vChkString = savefile.substring(savefile.length - 16)
+        var vStr = savefile.substring(0, savefile.length - 16)
+
+        console.log("vChkString: " + vChkString)
+        console.log("vStr: " + vStr)
+
+        savefile = vStr
+
+        b64decode()
+      }
 
       async function loadSave ( event ) {
         const file = event.target.files.item(0)
@@ -16,8 +35,11 @@
   </head>
   <body>
     \AppData\Roaming\GCCS\Local Store\<br>
-    <input type="file" onchange="loadSave(event)"/><br>
-    <textarea id="savefile-input" style="width: 500px; height: 100px;" readonly="readonly"></textarea><br>
-    <input type="button" value="Download" onclick="download()"/><br>
+    <input type="file" onchange="loadSave(event)"/><br/>
+    <input type="button" value="Decrypt" onclick="decryptSave()"/><br/>
+    Input:<br/>
+    <textarea id="savefile-input" style="width: 500px; height: 100px;" readonly="readonly"></textarea><br/>
+    b64decode:<br/>
+    <textarea id="savefile-b64decode" style="width: 500px; height: 100px;" readonly="readonly"></textarea><br/>
   </body>
 </html>
