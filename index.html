@@ -143,14 +143,16 @@
         savestring.shift() // TI
         savefile['talismanInventory'] = {}
         for ( i = 0; i < 36; ++i ) {
-          savefile['talismanInventory'][i] = savestring.shift()
+          var vStr = savestring.shift()
+          savefile['talismanInventory'][i] = vStr == "-1" ? "-1" : CryptoJS.enc.Base64.parse(vStr).toString(CryptoJS.enc.Utf8)
         }
 
         savestring.shift() // ?
         savestring.shift() // TA
         savefile['talismanSlots'] = {}
         for ( i = 0; i < 15; ++i ) {
-          savefile['talismanSlots'][i] = savestring.shift()
+          var vStr = savestring.shift()
+          savefile['talismanSlots'][i] = vStr == "-1" ? "-1" : CryptoJS.enc.Base64.parse(vStr).toString(CryptoJS.enc.Utf8)
         }
 
         savestring.shift() // ?
@@ -184,9 +186,6 @@
       function decryptSave ( ) {
         var vChkString = savefile.substring(savefile.length - 16)
         var vStr = savefile.substring(0, savefile.length - 16)
-
-        console.log("vChkString: " + vChkString)
-        console.log("vStr: " + vStr)
 
         savefile = vStr
 
