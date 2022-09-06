@@ -1,0 +1,23 @@
+<html>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+    <script>
+      var state = "uninitialized"
+      var savefile = {}
+
+      async function loadSave ( event ) {
+        const file = event.target.files.item(0)
+        const contents = await file.text()
+        state = "encrypted"
+        savefile = contents
+        document.getElementById('savefile-input').value = savefile
+      }
+    </script>
+  </head>
+  <body>
+    \AppData\Roaming\GCCS\Local Store\<br>
+    <input type="file" onchange="loadSave(event)"/><br>
+    <textarea id="savefile-input" style="width: 500px; height: 100px;" readonly="readonly"></textarea><br>
+    <input type="button" value="Download" onclick="download()"/><br>
+  </body>
+</html>
