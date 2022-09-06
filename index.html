@@ -1,6 +1,7 @@
 <html>
   <head>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+    <script type="text/javascript" src="pako.js"></script>
     <script>
       var state = "uninitialized"
       var savefile = ""
@@ -10,6 +11,13 @@
         savefile = savefile.split('').map(function(x){return x.charCodeAt(0);});
         savefile = new Uint8Array(savefile);
         document.getElementById('savefile-b64decode').value = savefile
+      }
+
+      function zlib_decompress ( ) {
+        savefile = pako.inflate(savefile);
+        savefile = new Uint16Array(savefile)
+        savefile = String.fromCharCode.apply(null, savefile);
+        document.getElementById('savefile-zlib_decompress').value = savefile
       }
 
       function decryptSave ( ) {
@@ -22,6 +30,8 @@
         savefile = vStr
 
         b64decode()
+
+        zlib_decompress()
       }
 
       async function loadSave ( event ) {
@@ -41,5 +51,7 @@
     <textarea id="savefile-input" style="width: 500px; height: 100px;" readonly="readonly"></textarea><br/>
     b64decode:<br/>
     <textarea id="savefile-b64decode" style="width: 500px; height: 100px;" readonly="readonly"></textarea><br/>
+    zlib_decompress:<br/>
+    <textarea id="savefile-zlib_decompress" style="width: 500px; height: 100px;" readonly="readonly"></textarea><br/>
   </body>
 </html>
