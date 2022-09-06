@@ -20,6 +20,14 @@
         document.getElementById('savefile-zlib_decompress').value = savefile
       }
 
+      function uncompress ( ) {
+        var COMPRESSED_STRS = [" ","!","#","$","%","&","(",")","*",".",":",";","<",">","@","[","]","_","{","|","}"]
+        var UNCOMPRESSED_STRS = [",B",",C",",D",",E",",F",",G",",H",",I",",J",",K",",L",",M",",N",",O",",P",",Q",",R",",S",",T",",U",",V"]
+        for ( i = 0; i < 22; ++i )
+          savefile = savefile.replaceAll(COMPRESSED_STRS[i],UNCOMPRESSED_STRS[i])
+        document.getElementById('savefile-uncompress').value = savefile
+      }
+
       function decryptSave ( ) {
         var vChkString = savefile.substring(savefile.length - 16)
         var vStr = savefile.substring(0, savefile.length - 16)
@@ -32,6 +40,8 @@
         b64decode()
 
         zlib_decompress()
+
+        uncompress()
       }
 
       async function loadSave ( event ) {
@@ -53,5 +63,7 @@
     <textarea id="savefile-b64decode" style="width: 500px; height: 100px;" readonly="readonly"></textarea><br/>
     zlib_decompress:<br/>
     <textarea id="savefile-zlib_decompress" style="width: 500px; height: 100px;" readonly="readonly"></textarea><br/>
+    uncompress:<br/>
+    <textarea id="savefile-uncompress" style="width: 500px; height: 100px;" readonly="readonly"></textarea><br/>
   </body>
 </html>
