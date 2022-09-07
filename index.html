@@ -59,14 +59,7 @@
       }
 
       function zlib_decompress ( ) {
-        console.log("Decompress")
-        console.log(savefile)
         savefile = pako.inflate(savefile);
-        console.log(savefile)
-        savefile = pako.deflate(savefile);
-        console.log(savefile)
-        savefile = pako.inflate(savefile);
-        console.log(savefile)
         savefile = new Uint16Array(savefile)
         savefile = String.fromCharCode.apply(null, savefile);
         document.getElementById('savefile-zlib_decompress').value = savefile
@@ -74,10 +67,7 @@
       function zlib_compress ( ) {
         savefile = savefile.split('').map(function(x){return x.charCodeAt(0);});
         savefile = new Uint16Array(savefile);
-        console.log("Compress")
-        console.log(savefile)
         savefile = pako.deflate(savefile);
-        console.log(savefile)
         document.getElementById('savefile-zlib_compress').value = savefile
       }
 
@@ -387,6 +377,10 @@
         document.getElementById('savefile-output').value = savefile
       }
 
+      function cheat_shadowCoreAmount ( ) {
+        savefile['shadowCoreAmount'] = 1e40
+      }
+
       async function loadSave ( event ) {
         const file = event.target.files.item(0)
         const contents = await file.text()
@@ -394,13 +388,27 @@
         savefile = contents
         document.getElementById('savefile-input').value = savefile
       }
+      function downloadSave ( ) {
+        var element = document.createElement('a')
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(savefile))
+        element.setAttribute('download', 'savefile.dat')
+
+        element.style.display = 'none'
+        document.body.appendChild(element)
+
+        element.click()
+
+        document.body.removeChild(element)
+      }
     </script>
   </head>
   <body>
     \AppData\Roaming\GCCS\Local Store\<br>
     <input type="file" onchange="loadSave(event)"/><br/>
     <input type="button" value="Decrypt" onclick="decryptSave()"/><br/>
+    <input type="button" value="Get like a bazilion shadow cores" onclick="cheat_shadowCoreAmount()"/><br/>
     <input type="button" value="Encrypt" onclick="encryptSave()"/><br/>
+    <input type="button" value="Download" onclick="downloadSave()"/><br/>
     Input:<br/>
     <textarea id="savefile-input" style="width: 500px; height: 100px;" readonly="readonly"></textarea><br/>
     b64decode:<br/>
