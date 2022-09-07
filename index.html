@@ -7,24 +7,89 @@
       var state = "uninitialized"
       var savefile = ""
 
+      function base64tobase10 ( b64Str ) {
+        var BASE64CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+        var i = 0
+        var vIsNegative = b64Str.charAt(0) == "-"
+        if (vIsNegative)
+          b64Str = b64Str.substring(1)
+
+        var vValue = 0
+        var iLim = b64Str.length
+        for ( i = 0; i < iLim; ++i )
+          vValue += BASE64CHARS.indexOf(b64Str.charAt(i)) * Math.pow(64, b64Str.length - i - 1)
+
+        if (vIsNegative)
+          vValue *= -1
+
+        return vValue
+      }
+      function base10tobase64 ( b10Int ) {
+        var BASE64CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+        var vIsNegative = b10Int < 0
+        b10Int = Math.abs(b10Int)
+        var vStr = ""
+        var vExp = 0
+        while ( b10Int > 0 ) {
+          var vCurrentValueToBase64Digit = b10Int % Math.pow(64, vExp + 1)
+          b10Int -= vCurrentValueToBase64Digit
+          vCurrentValueToBase64Digit = Math.round(vCurrentValueToBase64Digit / Math.pow(64, vExp))
+          vStr = BASE64CHARS.charAt(vCurrentValueToBase64Digit) + vStr
+          vExp++
+        }
+        if ( vIsNegative )
+          vStr = "-" + vStr
+
+        return vStr
+      }
+
       function b64decode ( ) {
         savefile = atob(savefile)
         savefile = savefile.split('').map(function(x){return x.charCodeAt(0);});
         savefile = new Uint8Array(savefile);
         document.getElementById('savefile-b64decode').value = savefile
       }
+      function b64encode ( ) {
+        savefile = new Uint8Array(savefile)
+        savefile = String.fromCharCode.apply(null, savefile)
+        savefile = btoa(savefile)
+        document.getElementById('savefile-b64encode').value = savefile
+      }
 
       function zlib_decompress ( ) {
+        console.log("Decompress")
+        console.log(savefile)
         savefile = pako.inflate(savefile);
+        console.log(savefile)
+        savefile = pako.deflate(savefile);
+        console.log(savefile)
+        savefile = pako.inflate(savefile);
+        console.log(savefile)
         savefile = new Uint16Array(savefile)
         savefile = String.fromCharCode.apply(null, savefile);
         document.getElementById('savefile-zlib_decompress').value = savefile
+      }
+      function zlib_compress ( ) {
+        savefile = savefile.split('').map(function(x){return x.charCodeAt(0);});
+        savefile = new Uint16Array(savefile);
+        console.log("Compress")
+        console.log(savefile)
+        savefile = pako.deflate(savefile);
+        console.log(savefile)
+        document.getElementById('savefile-zlib_compress').value = savefile
       }
 
       function uncompress ( ) {
         for ( i = 0; i < 21; ++i )
           savefile = savefile.replaceAll(COMPRESSED_STRS[i],UNCOMPRESSED_STRS[i])
         document.getElementById('savefile-uncompress').value = savefile
+      }
+      function compress ( ) {
+        for ( i = 0; i < 21; ++i )
+          savefile = savefile.replaceAll(UNCOMPRESSED_STRS[i],COMPRESSED_STRS[i])
+        document.getElementById('savefile-compress').value = savefile
       }
 
       function deserialize ( ) {
@@ -56,29 +121,29 @@
         savefile['stageHighestXps'] = {}
         savefile['stageHighestDiffsCompleted'] = {}
         for ( i = 0; i < 191; ++i ) {
-          savefile['stageHighestXps'][STAGES[i]] = savestring.shift()
-          savefile['stageHighestDiffsCompleted'][STAGES[i]] = savestring.shift()
+          savefile['stageHighestXps'][STAGES[i]] = base64tobase10(savestring.shift())
+          savefile['stageHighestDiffsCompleted'][STAGES[i]] = base64tobase10(savestring.shift())
         }
 
         savestring.shift() // ?
         savestring.shift() // DU
         savefile['stageHighestEnduranceDiffsCompleted'] = {}
         for ( i = 0; i < 191; ++i ) {
-          savefile['stageHighestEnduranceDiffsCompleted'][STAGES[i]] = savestring.shift()
+          savefile['stageHighestEnduranceDiffsCompleted'][STAGES[i]] = base64tobase10(savestring.shift())
         }
 
         savestring.shift() // ?
         savestring.shift() // TT
         savefile['stats'] = {}
         for ( i = 0; i < 60; ++i ) {
-          savefile['stats'][STATS[i]] = savestring.shift()
+          savefile['stats'][STATS[i]] = base64tobase10(savestring.shift())
         }
 
         savestring.shift() // ?
         savestring.shift() // SK
         savefile['skillLevels'] = {}
         for ( i = 0; i < 26; ++i ) {
-          savefile['skillLevels'][SKILLS[i]] = savestring.shift()
+          savefile['skillLevels'][SKILLS[i]] = base64tobase10(savestring.shift())
         }
 
         savestring.shift() // ?
@@ -114,7 +179,7 @@
         savefile['talismanInventory'] = {}
         for ( i = 0; i < 36; ++i ) {
           var vStr = savestring.shift()
-          savefile['talismanInventory'][i] = vStr == "-1" ? "-1" : CryptoJS.enc.Base64.parse(vStr).toString(CryptoJS.enc.Utf8)
+          savefile['talismanInventory'][i] = vStr == "-1" ? "-1" : CryptoJS.enc.Base64.parse(vStr).toString(CryptoJS.enc.Utf8).split('/')
         }
 
         savestring.shift() // ?
@@ -122,7 +187,7 @@
         savefile['talismanSlots'] = {}
         for ( i = 0; i < 15; ++i ) {
           var vStr = savestring.shift()
-          savefile['talismanSlots'][i] = vStr == "-1" ? "-1" : CryptoJS.enc.Base64.parse(vStr).toString(CryptoJS.enc.Utf8)
+          savefile['talismanSlots'][i] = vStr == "-1" ? "-1" : CryptoJS.enc.Base64.parse(vStr).toString(CryptoJS.enc.Utf8).split('/')
         }
 
         savestring.shift() // ?
@@ -137,7 +202,7 @@
         savestring.shift() // SW
         savefile['compassDirections'] = {}
         for ( i = 0; i < 7; ++i ) {
-          savefile['compassDirections'][i] = savestring.shift()
+          savefile['compassDirections'][i] = base64tobase10(savestring.shift())
         }
         savefile['compassSeed'] = savestring.shift()
         savefile['compassAwardsUnlocked'] = savestring.shift()
@@ -152,10 +217,146 @@
 
         document.getElementById('savefile-deserialize').value = JSON.stringify(savefile, null, 2)
       }
+      function serialize ( ) {
+        savestring = []
+        savestring.push('VR')
+        savestring.push(savefile['gameVersion'])
+
+        savestring.push('?')
+        savestring.push('RX')
+        savestring.push(savefile['recoveredEnduranceXp'])
+
+        savestring.push('?')
+        savestring.push('RF')
+        savestring.push(savefile['recoveredEnduranceFieldStrId'])
+
+        savestring.push('?')
+        savestring.push('RT')
+        savestring.push(savefile['recoveredEnduranceFragmentsBase64'])
+
+        savestring.push('?')
+        savestring.push('AR')
+        savestring.push(savefile['achiResetSkillPtBonus'])
+
+        savestring.push('?')
+        savestring.push('XP')
+
+        for ( i = 0; i < 191; ++i ) {
+          savestring.push(base10tobase64(savefile['stageHighestXps'][STAGES[i]]))
+          savestring.push(base10tobase64(savefile['stageHighestDiffsCompleted'][STAGES[i]]))
+        }
+
+        savestring.push('?')
+        savestring.push('DU')
+        for ( i = 0; i < 191; ++i ) {
+          savestring.push(base10tobase64(savefile['stageHighestEnduranceDiffsCompleted'][STAGES[i]]))
+        }
+
+        savestring.push('?')
+        savestring.push('TT')
+        for ( i = 0; i < 60; ++i ) {
+          savestring.push(base10tobase64(savefile['stats'][STATS[i]]))
+        }
+
+        savestring.push('?')
+        savestring.push('SK')
+        for ( i = 0; i < 26; ++i ) {
+          savestring.push(base10tobase64(savefile['skillLevels'][SKILLS[i]]))
+        }
+
+        savestring.push('?')
+        savestring.push('AC')
+        savestring.push(savefile['achievements'])
+
+        savestring.push('?')
+        savestring.push('TP')
+        savestring.push(savefile['gotTutorialPages'])
+
+        savestring.push('?')
+        savestring.push('JP')
+        savestring.push(savefile['gotJourneyPages'])
+
+        savestring.push('?')
+        savestring.push('HX')
+        savestring.push(savefile['gotMapHexTiles'])
+
+        savestring.push('?')
+        savestring.push('ST')
+        savestring.push(savefile['gotSkillTomes'])
+
+        savestring.push('?')
+        savestring.push('TS')
+        savestring.push(savefile['gotBattleTraitScrolls'])
+
+        savestring.push('?')
+        savestring.push('DS')
+        savestring.push(savefile['gotBattleDifficultyScrolls'])
+
+        savestring.push('?')
+        savestring.push('TI')
+        for ( i = 0; i < 36; ++i ) {
+          savestring.push(savefile['talismanInventory'][i] == "-1" ? "-1" : CryptoJS.enc.Utf8.parse(savefile['talismanInventory'][i].join('/')).toString(CryptoJS.enc.Base64))
+        }
+
+        savestring.push('?')
+        savestring.push('TA')
+        for ( i = 0; i < 15; ++i ) {
+          savestring.push(savefile['talismanSlots'][i] == "-1" ? "-1" : CryptoJS.enc.Utf8.parse(savefile['talismanSlots'][i].join('/')).toString(CryptoJS.enc.Base64))
+        }
+
+        savestring.push('?')
+        savestring.push('SB')
+        savestring.push(savefile['skillPtsBought'])
+
+        savestring.push('?')
+        savestring.push('SC')
+        savestring.push(savefile['shadowCoreAmount'])
+
+        savestring.push('?')
+        savestring.push('SW')
+        for ( i = 0; i < 7; ++i ) {
+          savestring.push(base10tobase64(savefile['compassDirections'][i]))
+        }
+        savestring.push(savefile['compassSeed'])
+        savestring.push(savefile['compassAwardsUnlocked'])
+
+        savestring.push('?')
+        savestring.push('GM')
+        savestring.push(savefile['gameMode'])
+
+        savestring.push('?')
+        savestring.push('BL')
+        savestring.push(savefile['fragRarBoostLeft'])
+
+        savefile = savestring.join(',')
+
+        document.getElementById('savefile-serialize').value = savefile
+      }
+
+      function calculateChecksum ( vStr ) {
+        var i = 0
+        var iLim = vStr.length
+        var left = 29318441
+        var right = 33264582
+        for ( i = 0; i < iLim; ++i ) {
+          left = left * (vStr.charCodeAt(i) + 78 + i * 111) % (94382918 - 105) + 28931 - 5
+          right = right * (vStr.charCodeAt(i) + 122 + i * 111) % (90542157 - 105) + 90542 - 5
+        }
+        left = left % 89999999 + 10000000
+        right = right % 89999999 + 10000000
+        right = Math.round(Math.abs(right))
+        left = Math.round(Math.abs(left))
+
+        return left + "" + right
+      }
 
       function decryptSave ( ) {
         var vChkString = savefile.substring(savefile.length - 16)
         var vStr = savefile.substring(0, savefile.length - 16)
+
+        var vChk = calculateChecksum(vStr)
+        console.log("Encountered checksum: " + vChk)
+        console.log("Expected checksum: " + vChkString)
 
         savefile = vStr
 
@@ -168,6 +369,22 @@
         deserialize()
 
         console.log(savefile)
+      }
+      function encryptSave ( ) {
+        serialize()
+
+        compress()
+
+        zlib_compress()
+
+        b64encode()
+
+        var vChkString = calculateChecksum(savefile)
+        console.log("Calculated checksum: " + vChkString)
+
+        savefile = savefile + vChkString
+
+        document.getElementById('savefile-output').value = savefile
       }
 
       async function loadSave ( event ) {
@@ -183,6 +400,7 @@
     \AppData\Roaming\GCCS\Local Store\<br>
     <input type="file" onchange="loadSave(event)"/><br/>
     <input type="button" value="Decrypt" onclick="decryptSave()"/><br/>
+    <input type="button" value="Encrypt" onclick="encryptSave()"/><br/>
     Input:<br/>
     <textarea id="savefile-input" style="width: 500px; height: 100px;" readonly="readonly"></textarea><br/>
     b64decode:<br/>
@@ -193,5 +411,15 @@
     <textarea id="savefile-uncompress" style="width: 500px; height: 100px;" readonly="readonly"></textarea><br/>
     deserialize:<br/>
     <textarea id="savefile-deserialize" style="width: 500px; height: 100px;" readonly="readonly"></textarea><br/>
+    serialize:<br/>
+    <textarea id="savefile-serialize" style="width: 500px; height: 100px;" readonly="readonly"></textarea><br/>
+    compress:<br/>
+    <textarea id="savefile-compress" style="width: 500px; height: 100px;" readonly="readonly"></textarea><br/>
+    zlib_compress:<br/>
+    <textarea id="savefile-zlib_compress" style="width: 500px; height: 100px;" readonly="readonly"></textarea><br/>
+    b64encode:<br/>
+    <textarea id="savefile-b64encode" style="width: 500px; height: 100px;" readonly="readonly"></textarea><br/>
+    Output:<br/>
+    <textarea id="savefile-output" style="width: 500px; height: 100px;" readonly="readonly"></textarea><br/>
   </body>
 </html>
