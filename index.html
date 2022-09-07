@@ -380,6 +380,9 @@
       function cheat_shadowCoreAmount ( ) {
         savefile['shadowCoreAmount'] = 1e40
       }
+      function cheat_skillPtsBought ( ) {
+        savefile['skillPtsBought'] = 1e10
+      }
 
       async function loadSave ( event ) {
         const file = event.target.files.item(0)
@@ -407,6 +410,7 @@
     <input type="file" onchange="loadSave(event)"/><br/>
     <input type="button" value="Decrypt" onclick="decryptSave()"/><br/>
     <input type="button" value="Get like a bazilion shadow cores" onclick="cheat_shadowCoreAmount()"/><br/>
+    <input type="button" value="Get arguably too many skill points" onclick="cheat_skillPtsBought()"/><br/>
     <input type="button" value="Encrypt" onclick="encryptSave()"/><br/>
     <input type="button" value="Download" onclick="downloadSave()"/><br/>
     Input:<br/>
